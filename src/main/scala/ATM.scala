@@ -4,7 +4,7 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 object ATM{
-    //SQL STUFF
+    //SQL SETUP AND EXAMPLE
     val url = "jdbc:mysql://localhost:3306/demodatabase"
     val driver = "com.mysql.cj.jdbc.Driver"
     val username = "root"
@@ -15,10 +15,10 @@ object ATM{
         Class.forName(driver)
         connection = DriverManager.getConnection(url, username, password)
         val statement = connection.createStatement
-        val rs = statement.executeQuery("SELECT userName,userPassword from userlogins")
+        val rs = statement.executeQuery("SELECT userName,userPin from userlogins")
         while (rs.next) {
             val host = rs.getString("userName")
-            val user = rs.getString("userPassword")
+            val user = rs.getString("userPin")
             println("host = %s, user = %s".format(host,user))
         }
     } catch {
@@ -34,23 +34,53 @@ object ATM{
 
 
 
-
     val testingName = "Cameron"
     var user1 = User("Cameron", "Admin", 23, 5000)
 
-//    def openLogin(): Unit = {
-//        println(
-//            """  _____________________________________
-//              |//       Welcome to Revature ATM       \\
-//              ||| Please enter your login information: ||
-//              |""".stripMargin)
-//        readLine("Username: ")
-//    }
+    def openLogin(): Unit = {
+        println(
+            """  _____________________________________
+              |//       Welcome to Revature Banking       \\
+              ||| If you need to register for a new       ||
+              ||| account please enter "New" below.       ||
+              ||| Please enter your login information:    ||
+              |""".stripMargin)
+        var getUsername = readLine("Username: ")
+        if (getUsername.equals("New")){
+            createAccount()
+        }
+    }
+
+    def createAccount(): Unit = {
+        println(
+            """  _________________________________________
+              |//       Let's create an account!          \\
+              |=============================================
+              |""".stripMargin)
+        var requestedUsername = readLine("Please enter your desired username:     ")
+        println(" You will need a four digit PIN.    ")
+        println(" Please enter your desired PIN:     ")
+        var requestedPin = readInt()
+
+        try {
+            Class.forName(driver)
+            connection = DriverManager.getConnection(url, username, password)
+            val statement = connection.createStatement
+            val pstmt = connection.prepareStatement("INSERT INTO `userlogins`(userName,userPin) VALUES (?, ?)")
+            pstmt.setString(1, requestedUsername)
+            pstmt.setInt(2, requestedPin)
+            pstmt.executeUpdate()
+            println("Your new account has been created!")
+        } catch {
+            case e: Exception => e.printStackTrace
+        }
+        connection.close
+    }
 
     def openMenu(): Int = {
         println(
             s"""  _______________________________________
-              |//     Welcome to Revature ATM, ${user1.getName()}  \\\\
+              |//   Welcome to Revature Banking, ${user1.getName()}  \\\\
               ||| ========================================||
               ||| 1. Check Balance                        ||
               ||| 2. Deposit Money                        ||
@@ -102,6 +132,7 @@ object ATM{
     def main(args: Array[String]): Unit = {
         var action = 1
         var start = true
+        openLogin()
         action = openMenu()
         while(start) {
             start = checkAction(action)
