@@ -4,6 +4,8 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 object ATM{
+    // Globals
+    var currentUser = ""
     //SQL SETUP AND EXAMPLE
     val url = "jdbc:mysql://localhost:3306/demodatabase"
     val driver = "com.mysql.cj.jdbc.Driver"
@@ -46,8 +48,31 @@ object ATM{
               ||| Please enter your login information:    ||
               |""".stripMargin)
         var getUsername = readLine("Username: ")
+        print("Pin: ")
+        var getPin = readInt()
         if (getUsername.equals("New")){
             createAccount()
+        }else{
+            try {
+                Class.forName(driver)
+                connection = DriverManager.getConnection(url, username, password)
+                val statement = connection.createStatement
+                val rs = statement.executeQuery(s"SELECT count(*) AS counter FROM userlogins WHERE userName=('$getUsername') AND userPin=($getPin)")
+                var count = ""
+                rs.next()
+                count = rs.getString("counter")
+                if (count.equals("1")){
+                    println("Login authorized...")
+                    println("Loading the menu...")
+                    currentUser = getUsername
+                }else{
+                    println("You've entered the wrong credentials. Please try again or create a new account.")
+                    openLogin()
+                }
+            } catch {
+                case e: Exception => e.printStackTrace
+            }
+            connection.close
         }
     }
 
@@ -70,17 +95,18 @@ object ATM{
             pstmt.setString(1, requestedUsername)
             pstmt.setInt(2, requestedPin)
             pstmt.executeUpdate()
-            println("Your new account has been created!")
+            println("Your new account has been created! Taking you back to the login.")
         } catch {
             case e: Exception => e.printStackTrace
         }
         connection.close
+        openLogin()
     }
 
     def openMenu(): Int = {
         println(
             s"""  _______________________________________
-              |//   Welcome to Revature Banking, ${user1.getName()}  \\\\
+              |//   Welcome to Revature Banking, $currentUser  \\\\
               ||| ========================================||
               ||| 1. Check Balance                        ||
               ||| 2. Deposit Money                        ||
