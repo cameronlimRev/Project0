@@ -3,6 +3,8 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.io._
 
+import user.User
+
 /** TODO LIST
  * => 1.Delete User
  * => 2. Create databases for Users.
@@ -20,6 +22,8 @@ object ATM{
     val username = "root"
     val password = "sqlProject0"
     var connection: Connection = DriverManager.getConnection(url, username, password)
+    var user = new User("")
+
 
     def openLogin(): Unit = {
         println(
@@ -46,6 +50,7 @@ object ATM{
                     println("Loading the menu...")
                     currentUser = getUsername
                     currentPin = getPin
+                    var user = new User(currentUser)
                 }else{
                     println("You've entered the wrong credentials. Please try again or create a new account.")
                     openLogin()
@@ -110,67 +115,19 @@ object ATM{
     def checkAction(filter: Int): Boolean = {
         filter match {
             case 1 => {
-                try {
-                    val statement = connection.createStatement
-                    val rs = statement.executeQuery(s"SELECT balance FROM userdata WHERE userdata.user_id=(SELECT id from userlogins WHERE userName='$currentUser')")
-                    rs.next()
-                    var currentBalance = rs.getDouble("balance")
-                    println(f"Your current Balance is: $$$currentBalance%1.2f")
-                } catch {
-                    case e: Exception => e.printStackTrace
-                }
+               user.getBalance(currentUser, currentPin)
                 true
             }
             case 2 => {
-                try {
-                    val statement = connection.createStatement
-                    val rs = statement.executeQuery(s"SELECT balance FROM userdata WHERE userdata.user_id=(SELECT id from userlogins WHERE userName='$currentUser')")
-                    rs.next()
-                    var currentBalance = rs.getDouble("balance")
-                    println(s"Your balance before the transaction: $$$currentBalance\n")
-                    print("Please enter the amount you are depositing: $")
-                    val transactionAmount = readDouble()
-                    currentBalance += transactionAmount
-                    println(f"Your new balance: $$$currentBalance%1.2f")
-                    val pstmt = connection.prepareStatement(s"UPDATE userdata SET balance = $currentBalance WHERE user_id=(SELECT id from userlogins WHERE userName='$currentUser')")
-                    pstmt.executeUpdate()
-                } catch {
-                    case e: Exception => e.printStackTrace
-                }
+                user.deposit(currentUser, currentPin)
                 true
             }
             case 3 => {
-                try {
-                    val statement = connection.createStatement
-                    val rs = statement.executeQuery(s"SELECT balance FROM userdata WHERE userdata.user_id=(SELECT id from userlogins WHERE userName='$currentUser')")
-                    rs.next()
-                    var currentBalance = rs.getDouble("balance")
-                    println(s"Your balance before the transaction: $$$currentBalance\n")
-                    print("Please enter the amount you are withdrawing: $")
-                    val transactionAmount = readDouble()
-                    currentBalance -= transactionAmount
-                    println(f"Your new balance: $$$currentBalance%1.2f")
-                    val pstmt = connection.prepareStatement(s"UPDATE userdata SET balance = $currentBalance WHERE user_id=(SELECT id from userlogins WHERE userName='$currentUser')")
-                    pstmt.executeUpdate()
-                } catch {
-                    case e: Exception => e.printStackTrace
-                }
+                user.withdraw(currentUser, currentPin)
                 true
             }
             case 4 => {
-                try {
-                    val statement = connection.createStatement
-                    val rs = statement.executeQuery(s"SELECT balance FROM userdata WHERE userdata.user_id=(SELECT id from userlogins WHERE userName='$currentUser')")
-                    rs.next()
-                    var currentBalance = rs.getDouble("balance")
-                    val file = new File(s"src/userBalances/'$currentUser'_balance.txt")
-                    val bw = new BufferedWriter(new FileWriter(file))
-                    bw.write(f"$currentUser your balance is: $$$currentBalance%1.2f.")
-                    bw.close()
-                    println("Your balance has been saved to src/userBalances")
-                } catch {
-                    case e: Exception => e.printStackTrace
-                }
+                user.printBalance(currentUser, currentPin)
                 true
             }
             case 5 => {
