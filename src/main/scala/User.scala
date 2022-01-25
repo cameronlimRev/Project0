@@ -1,9 +1,6 @@
-package user
-
+import java.io.*
+import java.sql.{Connection, DriverManager}
 import scala.io.StdIn.*
-import java.sql.Connection
-import java.sql.DriverManager
-import java.io._
 
 class User(name: String) {
   val thisName = name
@@ -82,5 +79,4 @@ class User(name: String) {
       case e: Exception => e.printStackTrace
     }
   }
-  connection.close()
 }

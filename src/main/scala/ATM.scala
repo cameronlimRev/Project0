@@ -1,9 +1,7 @@
-import scala.io.StdIn._
+import scala.io.StdIn.*
 import java.sql.Connection
 import java.sql.DriverManager
-import java.io._
-
-import user.User
+import java.io.*
 
 /** TODO LIST
  * => 1.Delete User
@@ -16,6 +14,7 @@ object ATM{
     // Globals
     var currentUser = ""
     var currentPin = 0;
+    var currentID = 0
     //SQL SETUP AND EXAMPLE
     val url = "jdbc:mysql://localhost:3306/demodatabase"
     val driver = "com.mysql.cj.jdbc.Driver"
@@ -34,12 +33,12 @@ object ATM{
               ||| Please enter your login information:    ||
               |""".stripMargin)
         var getUsername = readLine("Username: ")
-        print("Pin: ")
-        var getPin = readInt()
         if (getUsername.equals("New")){
             createAccount()
         }else{
             try {
+                print("Pin: ")
+                var getPin = readInt()
                 val statement = connection.createStatement
                 val rs = statement.executeQuery(s"SELECT count(*) AS counter FROM userlogins WHERE userName=('$getUsername') AND userPin=($getPin)")
                 var count = ""
@@ -51,6 +50,9 @@ object ATM{
                     currentUser = getUsername
                     currentPin = getPin
                     var user = new User(currentUser)
+                    val rc = statement.executeQuery(s"SELECT id FROM userlogins WHERE userName=('$getUsername') AND userPin=($getPin)")
+                    rc.next()
+                    currentID = rc.getInt("id")
                 }else{
                     println("You've entered the wrong credentials. Please try again or create a new account.")
                     openLogin()
@@ -78,6 +80,14 @@ object ATM{
             pstmt.setString(1, requestedUsername)
             pstmt.setInt(2, requestedPin)
             pstmt.executeUpdate()
+            val rs = statement.executeQuery(s"SELECT id FROM userlogins WHERE userName=('$requestedUsername')")
+            rs.next()
+            val newID = rs.getInt("id")
+            println(newID)
+            val pstmt2 = connection.prepareStatement("INSERT INTO `userdata`(user_id,balance) VALUES (?, ?)")
+            pstmt2.setInt(1, newID)
+            pstmt2.setDouble(2, 5000)
+            pstmt2.executeUpdate()
             println("Your new account has been created! Taking you back to the login.")
         } catch {
             case e: Exception => e.printStackTrace
@@ -94,8 +104,10 @@ object ATM{
               ||| 2. Deposit Money                        ||
               ||| 3. Withdraw Money                       ||
               ||| 4. Print Balance                        ||
-              ||| 5. Delete Account                       ||
-              ||| 6. Exit                                 ||
+              ||| 5. Transfer Money                       ||
+              ||| 6. View Transaction History             ||
+              ||| 7. Delete Account                       ||
+              ||| 8. Exit                                 ||
               |\\\\_________________________________________//
               |""".stripMargin)
         println("Please enter a number (1-6) to continue: ")
@@ -131,6 +143,20 @@ object ATM{
                 true
             }
             case 5 => {
+                println(
+                    """  _________________________________________
+                      |//       Please Pick Transfer Recipient    \\
+                      |=============================================
+                      |""".stripMargin)
+                getUserList()
+                print("Please enter the ID of the user: ")
+                val receiverID = readInt()
+                print("Please enter the you want to transfer: ")
+                val transactionAmount = readDouble()
+                var transaction = new Transaction(currentID, receiverID, transactionAmount).executeTransaction()
+                true
+            }
+            case 7 => {
                 try {
                     val statement = connection.createStatement
                     val confirmation = readLine("Are you sure you want to delete? (Enter 'Yes' to confirm): ")
@@ -148,7 +174,7 @@ object ATM{
                 }
                 true
             }
-            case 6 => {
+            case 8 => {
                 println("Goodbye!")
                 false
             }
@@ -160,9 +186,24 @@ object ATM{
         }
     }
 
+    def getUserList(): Unit = {
+        try {
+            val statement = connection.createStatement
+            val rs = statement.executeQuery(s"SELECT id, userName FROM userlogins")
+            while (rs.next()){
+                System.out.println("ID: " + rs.getInt("id"))
+                System.out.println("Name: " + rs.getString("userName"))
+            }
+        } catch {
+            case e: Exception => e.printStackTrace
+        }
+    }
+
     def main(args: Array[String]): Unit = {
         var action = 1
         var start = true
+        var trans = new Transaction(1,2,300.0)
+        trans.getDate()
         openLogin()
         action = openMenu()
         while(start) {
@@ -175,7 +216,7 @@ object ATM{
                 action = openMenu()
             }
         }
-        connection.close
+//        connection.close
         System.exit(0)
     }
 }
