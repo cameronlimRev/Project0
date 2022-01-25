@@ -41,6 +41,7 @@ class User(name: String) {
       println(f"Your new balance: $$$currentBalance%1.2f")
       val pstmt = connection.prepareStatement(s"UPDATE userdata SET balance = $currentBalance WHERE user_id=(SELECT id from userlogins WHERE userName='$currentUser' AND userPin='$currentPin')")
       pstmt.executeUpdate()
+      addToTransactions(currentUser, currentPin, transactionAmount)
     } catch {
         case e: Exception => e.printStackTrace
     }
@@ -59,6 +60,7 @@ class User(name: String) {
       println(f"Your new balance: $$$currentBalance%1.2f")
       val pstmt = connection.prepareStatement(s"UPDATE userdata SET balance = $currentBalance WHERE user_id=(SELECT id from userlogins WHERE userName='$currentUser' AND userPin='$currentPin')")
       pstmt.executeUpdate()
+      addToTransactions(currentUser, currentPin, -(transactionAmount))
     } catch {
         case e: Exception => e.printStackTrace
     }
@@ -78,5 +80,20 @@ class User(name: String) {
     } catch {
       case e: Exception => e.printStackTrace
     }
+  }
+
+  def addToTransactions(currentUser: String, currentPin: Int, transactionAmount: Double): Unit = {
+    // Add to personal transaction history.
+    val statement = connection.createStatement
+    val rc = statement.executeQuery(s"SELECT id FROM userlogins WHERE userName=('$currentUser') AND userPin=($currentPin)")
+    rc.next()
+    val currentID = rc.getInt("id")
+    val pstmt2 = connection.prepareStatement("INSERT INTO `transactions`(sender_id,receiver_id,transaction_date, transaction_amount) VALUES (?, ?, ?, ?)")
+    pstmt2.setInt(1, currentID)
+    pstmt2.setInt(2, currentID)
+    pstmt2.setString(3, (java.time.LocalDate.now).toString)
+    pstmt2.setDouble(4, transactionAmount)
+    pstmt2.executeUpdate()
+    println("The transaction has been completed.")
   }
 }

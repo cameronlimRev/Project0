@@ -156,6 +156,29 @@ object ATM{
                 var transaction = new Transaction(currentID, receiverID, transactionAmount).executeTransaction()
                 true
             }
+            case 6 => {
+                try {
+                    val statement = connection.createStatement
+                    val statement2 = connection.createStatement
+                    val statement3 = connection.createStatement
+                    val rs = statement.executeQuery(s"SELECT transaction_id, sender_id, receiver_id, transaction_date, transaction_amount FROM transactions WHERE sender_id=$currentID OR receiver_id=$currentID")
+                    while (rs.next()){
+                        val transID = rs.getInt("transaction_id")
+                        val senderID = rs.getInt("sender_id")
+                        val senderHolder = statement2.executeQuery(s"SELECT userName from userlogins WHERE id=$senderID")
+                        senderHolder.next()
+                        val senderName = senderHolder.getString("userName")
+                        val receiverID = rs.getInt("receiver_id")
+                        val receiverHolder = statement3.executeQuery(s"SELECT userName from userlogins WHERE id=$receiverID")
+                        receiverHolder.next()
+                        val receiverName = receiverHolder.getString("userName")
+                        System.out.println("Transaction ID: " + transID + " | Sender ID: " + senderName + " | Receiver ID: " + receiverName + " | Transaction Date: " + rs.getString("transaction_date") + " | Transaction Amount: $" + rs.getDouble("transaction_amount"))
+                    }
+                } catch {
+                    case e: Exception => e.printStackTrace
+                }
+                true
+            }
             case 7 => {
                 try {
                     val statement = connection.createStatement
@@ -191,8 +214,7 @@ object ATM{
             val statement = connection.createStatement
             val rs = statement.executeQuery(s"SELECT id, userName FROM userlogins")
             while (rs.next()){
-                System.out.println("ID: " + rs.getInt("id"))
-                System.out.println("Name: " + rs.getString("userName"))
+                System.out.println("ID: " + rs.getInt("id") + " Name: " + rs.getString("userName"))
             }
         } catch {
             case e: Exception => e.printStackTrace

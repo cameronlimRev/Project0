@@ -25,7 +25,7 @@ class Transaction(senderID: Int, receiverID: Int, transactionAmount: Double) {
       currentBalance -= transactionAmount
       val pstmt = connection.prepareStatement(s"UPDATE userdata SET balance = $currentBalance WHERE user_id=$senderID")
       pstmt.executeUpdate()
-      println(s"Your new balance is: $currentBalance")
+      println(s"Your new balance is: $$$currentBalance")
     } catch {
       case e: Exception => e.printStackTrace
     }
@@ -43,7 +43,7 @@ class Transaction(senderID: Int, receiverID: Int, transactionAmount: Double) {
       val rb = statement.executeQuery(s"SELECT userName FROM userlogins WHERE userlogins.id=$receiverID")
       rb.next()
       val receiverName = rb.getString("userName")
-      println(s"$transactionAmount has been added to $receiverName's account.")
+      println(s"$$$transactionAmount has been added to $receiverName's account.")
     } catch {
       case e: Exception => e.printStackTrace
     }
