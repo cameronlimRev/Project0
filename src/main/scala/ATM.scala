@@ -20,6 +20,7 @@ object ATM{
     val driver = "com.mysql.cj.jdbc.Driver"
     val username = "root"
     val password = "sqlProject0"
+    Class.forName(driver)
     var connection: Connection = DriverManager.getConnection(url, username, password)
     var user = new User("")
 
@@ -110,7 +111,7 @@ object ATM{
               ||| 8. Exit                                 ||
               |\\\\_________________________________________//
               |""".stripMargin)
-        println("Please enter a number (1-6) to continue: ")
+        println("Please enter a number (1-8) to continue: ")
         val result = readInt()
         return result
 
@@ -202,7 +203,7 @@ object ATM{
                 false
             }
             case _ => {
-                println("Error: Please try again. Enter a number (1-5) ")
+                println("Error: Please try again. Enter a number (1-8) ")
                 val result = readInt()
                 true
             }
@@ -238,7 +239,7 @@ object ATM{
                 action = openMenu()
             }
         }
-//        connection.close
+        connection.close
         System.exit(0)
     }
 }
